@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeftRight, ArrowRight, FileText, Loader2, Package, Printer, Truck } from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
+import { getUnitShortLabel } from '@/constants/units'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/useToast'
 import type { Branch, BranchTransferItem } from '@/types'
@@ -323,7 +324,7 @@ const TransferDetailModal = ({ transfer, open, onOpenChange }: TransferDetailMod
                             <TableCell data-testid={`transfer-item-${item.id}-requested`} className="text-data-mono font-data-mono text-right text-foreground">
                               {String(item.quantity_requested)}
                               {item.unit && (
-                                <span className="ml-1 text-body-sm text-on-surface-deep">{item.unit}</span>
+                                <span className="ml-1 text-body-sm text-on-surface-deep">{getUnitShortLabel(item.unit)}</span>
                               )}
                             </TableCell>
                             <TableCell data-testid={`transfer-item-${item.id}-approved`} className="text-data-mono font-data-mono text-right text-foreground">

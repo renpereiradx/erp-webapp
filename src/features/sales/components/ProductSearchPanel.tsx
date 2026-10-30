@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { HighlightText } from '@/components/ui/HighlightText';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
-import { isDecimalUnit } from '@/constants/units';
+import { isDecimalUnit, getUnitShortLabel } from '@/constants/units';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
@@ -209,7 +209,7 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                               {formatCurrency(product.price)}
                             </p>
                             <span className="text-body-sm text-outline-fg uppercase">
-                              / {product.base_unit}
+                              / {getUnitShortLabel(product.base_unit)}
                             </span>
                           </div>
                           {/* size lg: el stock es estado de venta, no un chip

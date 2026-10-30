@@ -5,6 +5,7 @@ import { useI18n } from '@/lib/i18n';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
+import { getUnitLabel, getUnitShortLabel } from '@/constants/units';
 import { PurchaseProductSearchInput } from './PurchaseProductSearchInput';
 
 export type PurchaseCartTableProps = Pick<
@@ -183,13 +184,13 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
                       </div>
                     )}
                     <div className='text-body-sm text-outline-fg mt-0.5'>
-                      {t('purchases.cart.unit', 'Unidad')}: {item.unit}
+                      {t('purchases.cart.unit', 'Unidad')}: {getUnitLabel(item.unit)}
                     </div>
                   </td>
 
                   <td className='px-md py-md text-center text-data-mono font-data-mono text-foreground'>
                     {formatNumber(item.quantity)}
-                    <span className='text-body-sm text-outline-fg'> {item.unit}</span>
+                    <span className='text-body-sm text-outline-fg'> {getUnitShortLabel(item.unit)}</span>
                   </td>
                   <td className='px-md py-md text-right text-data-mono font-data-mono text-on-surface-deep'>
                     {formatCurrency(item.unit_price)}

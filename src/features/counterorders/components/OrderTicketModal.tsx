@@ -14,6 +14,7 @@ import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import EnhancedModal from '@/components/ui/EnhancedModal'
 import { formatCurrency } from '@/utils/currencyUtils'
+import { getUnitShortLabel } from '@/constants/units'
 import type { CounterOrderDetail } from '../types'
 import { printTicketHtml } from '../utils/printTicket'
 
@@ -66,7 +67,7 @@ export function OrderTicketContent({ order }: { order: CounterOrderDetail }) {
                 {(item.price_warning || item.tax_warning) && ' *'}
               </td>
               <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                {item.quantity} {item.unit}
+                {item.quantity} {getUnitShortLabel(item.unit)}
               </td>
               <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
                 {item.price_warning || item.tax_warning ? '—' : formatCurrency(item.line_total)}

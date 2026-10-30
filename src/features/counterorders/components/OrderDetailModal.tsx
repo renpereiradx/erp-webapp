@@ -3,6 +3,7 @@ import { useI18n } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import EnhancedModal from '@/components/ui/EnhancedModal'
 import { formatCurrency } from '@/utils/currencyUtils'
+import { getUnitShortLabel } from '@/constants/units'
 import { cn } from '@/lib/utils'
 import type { CounterOrderDetail, CounterOrderSummary } from '../types'
 import { OrderStatusBadge } from './OrderStatusBadge'
@@ -106,7 +107,7 @@ export function OrderDetailModal({ open, detail, isLoading, summary, onClose, on
                     )}
                   </p>
                   <p className="text-body-sm text-on-surface-deep font-data-mono">
-                    {item.quantity} {item.unit} × {formatCurrency(item.unit_price_with_tax)}
+                    {item.quantity} {getUnitShortLabel(item.unit)} × {formatCurrency(item.unit_price_with_tax)}
                   </p>
                   {item.stock_warning && (
                     <p className="text-body-sm-bold text-warning flex items-center gap-1 mt-xs">

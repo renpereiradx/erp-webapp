@@ -19,6 +19,7 @@ import useClientStore from '@/store/useClientStore'
 import QuickClientModal from '@/features/party/components/QuickClientModal'
 import { saleService } from '@/services/saleService'
 import { formatCurrency } from '@/utils/currencyUtils'
+import { getUnitLabel } from '@/constants/units'
 import { fetchCatalogSellableUnits } from '@/features/catalog/hooks/useCatalogProducts'
 import { DEFAULT_CATALOG_FILTERS, type CatalogSellableUnit } from '@/features/catalog/types'
 import { cn } from '@/lib/utils'
@@ -558,9 +559,9 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
                             </p>
                             <p
                               className="text-label-caps uppercase text-on-surface-deep mt-0.5 truncate whitespace-nowrap"
-                              title={line.unit}
+                              title={getUnitLabel(line.unit)}
                             >
-                              {line.unit}
+                              {getUnitLabel(line.unit)}
                             </p>
                             {line.notes != null && (
                               <p className="text-body-sm text-on-surface-deep mt-0.5">{line.notes}</p>
@@ -639,7 +640,7 @@ export function OrderBuilder({ open, mode, editingOrder, onClose, onSaved }: Ord
                             {line.name}
                           </p>
                           <p className="text-label-caps uppercase text-on-surface-deep mt-0.5">
-                            {line.unit}
+                            {getUnitLabel(line.unit)}
                           </p>
                         </div>
                         <Button

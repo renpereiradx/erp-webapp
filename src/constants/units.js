@@ -84,6 +84,19 @@ export const getUnitLabel = (unit) => {
 };
 
 /**
+ * Etiqueta compacta para contextos "cantidad unidad": usa la abreviatura
+ * entre paréntesis del label (kg, l, m²) si existe; si no, el label completo
+ * (Botella, Caja, Docena). Nunca muestra el código crudo de la DB.
+ * @param {string} unit - Código de la unidad
+ * @returns {string} Etiqueta compacta de la unidad
+ */
+export const getUnitShortLabel = (unit) => {
+  const label = getUnitLabel(unit);
+  const match = label.match(/\(([^)]+)\)/);
+  return match ? match[1] : label;
+};
+
+/**
  * Verifica si una unidad permite decimales
  * @param {string} unit - Código de la unidad
  * @returns {boolean}

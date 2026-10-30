@@ -21,6 +21,7 @@ import { useBranch } from '@/contexts/BranchContext'
 import { useReservationsEnabled } from '@/store/useBusinessConfigStore'
 import { saleService } from '@/services/saleService'
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils'
+import { getUnitShortLabel } from '@/constants/units'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import { computeForeignDue } from '@/domain/sale/calculations/foreignPayment'
@@ -693,7 +694,7 @@ export const SaleCheckoutWizard: React.FC<SaleCheckoutWizardProps> = ({
                       {item.name}
                     </div>
                     <p className="text-body-sm text-on-surface-deep font-data-mono">
-                      {item.quantity} {item.unit} × {formatCurrency(Number(item.price) || 0, currencyCode)}
+                      {item.quantity} {getUnitShortLabel(item.unit)} × {formatCurrency(Number(item.price) || 0, currencyCode)}
                     </p>
                   </div>
                   <p className="text-body-md-bold font-data-mono text-foreground shrink-0">

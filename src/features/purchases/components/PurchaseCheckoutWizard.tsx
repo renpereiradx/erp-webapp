@@ -21,6 +21,7 @@ import { ShoppingCart, CheckCircle2, ChevronLeft, ChevronRight, Loader2, AlertCi
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils'
+import { getUnitShortLabel } from '@/constants/units'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import { useCheckoutShortcuts } from '@/features/sales/hooks/useCheckoutShortcuts';
@@ -445,7 +446,7 @@ export const PurchaseCheckoutWizard = ({
                       {item.product_name || item.name || item.product_id}
                     </p>
                     <p className="text-body-sm text-on-surface-deep font-data-mono">
-                      {formatNumber(Number(item.quantity) || 0)} {item.unit} × {formatCurrency(Number(item.unit_price) || 0, paymentCurrency)}
+                      {formatNumber(Number(item.quantity) || 0)} {getUnitShortLabel(item.unit)} × {formatCurrency(Number(item.unit_price) || 0, paymentCurrency)}
                     </p>
                   </div>
                   <p className="text-body-md-bold font-data-mono text-foreground shrink-0">

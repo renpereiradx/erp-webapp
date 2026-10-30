@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProductSearchInput from '@/components/ui/ProductSearchInput';
+import { getUnitShortLabel } from '@/constants/units';
 import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
 
@@ -759,7 +760,7 @@ const PriceTransactionsPage = () => {
                                 </div>
                                 <div>
                                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Moneda/Unidad</p>
-                                  <p className="text-lg font-bold">{currency} {transaction.unit && `/ ${transaction.unit}`}</p>
+                                  <p className="text-lg font-bold">{currency} {transaction.unit && `/ ${getUnitShortLabel(transaction.unit)}`}</p>
                                 </div>
                               </div>
                             );

@@ -525,7 +525,7 @@ const PriceAdjustmentDetail = () => {
                     className={SELECT_CLASSES}
                   >
                     {!CATALOG_UNIT_VALUES.has(formData.unit) && (
-                      <option value={formData.unit}>{formData.unit}</option>
+                      <option value={formData.unit}>{getUnitLabel(formData.unit)}</option>
                     )}
                     {UNIT_GROUPS.map(group => (
                       <optgroup key={group.label} label={group.label}>

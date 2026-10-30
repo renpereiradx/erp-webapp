@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/table';
 import EnhancedModal from '@/components/ui/EnhancedModal';
 import { formatCurrency } from '@/utils/currencyUtils';
+import { getUnitShortLabel } from '@/constants/units';
 import { cn } from '@/lib/utils';
 import { usePriceTransactions } from '@/hooks/usePriceTransactions';
 import { useCostTransactions } from '@/hooks/useCostTransactions';
@@ -251,7 +252,7 @@ export function ProductCostHistoryDialog({ productId, productName, isOpen, onClo
                       })()}
                     </TableCell>
                     <TableCell className="text-body-md text-foreground whitespace-nowrap">
-                      {item.unit || 'unit'}
+                      {getUnitShortLabel(item.unit || 'unit')}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div className="flex flex-col gap-xs">

@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { Pencil, ShoppingCart, History, Boxes } from 'lucide-react'
 import { toast } from 'sonner'
 import { useI18n } from '@/lib/i18n'
+import { getUnitShortLabel } from '@/constants/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -220,7 +221,7 @@ export function SuppliesTab() {
                       {s.name}
                     </TableCell>
                     <TableCell className="text-body-md text-on-surface-deep px-md">
-                      {s.unit}
+                      {getUnitShortLabel(s.unit)}
                     </TableCell>
                     <TableCell className="text-body-md text-on-surface-deep px-md">
                       {s.supplier_name ?? '—'}
@@ -229,7 +230,7 @@ export function SuppliesTab() {
                       {formatNumber(s.total_purchases, 0)}
                     </TableCell>
                     <TableCell className="text-data-mono font-data-mono text-right px-md">
-                      {formatNumber(s.total_quantity_purchased)} {s.unit}
+                      {formatNumber(s.total_quantity_purchased)} {getUnitShortLabel(s.unit)}
                     </TableCell>
                     <TableCell className="text-data-mono font-data-mono text-right px-md">
                       {s.avg_unit_cost != null ? formatCurrency(s.avg_unit_cost) : '—'}
@@ -388,7 +389,7 @@ export function SuppliesTab() {
               </Label>
               <p className="text-body-md text-foreground">
                 {purchase.supply.name}{' '}
-                <span className="text-on-surface-deep">({purchase.supply.unit})</span>
+                <span className="text-on-surface-deep">({getUnitShortLabel(purchase.supply.unit)})</span>
               </p>
             </div>
             <div className="grid grid-cols-2 gap-md">
@@ -541,7 +542,7 @@ function SupplyPurchasesModal({
                   {new Date(p.purchase_date).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="text-data-mono font-data-mono text-right px-md">
-                  {formatNumber(p.quantity)} {supply.unit}
+                  {formatNumber(p.quantity)} {getUnitShortLabel(supply.unit)}
                 </TableCell>
                 <TableCell className="text-data-mono font-data-mono text-right px-md">
                   {formatCurrency(p.unit_cost)}

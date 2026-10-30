@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import DataState from '@/components/ui/DataState';
+import { getUnitShortLabel } from '@/constants/units';
 import ToastContainer from '@/components/ui/ToastContainer';
 
 const PurchaseRequisitionDetailView: React.FC = () => {
@@ -131,7 +132,7 @@ const PurchaseRequisitionDetailView: React.FC = () => {
                             <p className="text-[0.6667rem] text-slate-400 font-mono">{item.product_sku || item.product_id}</p>
                          </td>
                          <td className="py-4 px-4 text-center font-black text-slate-700">
-                            {item.quantity} {item.unit || 'uds'}
+                            {item.quantity} {getUnitShortLabel(item.unit || 'uds')}
                          </td>
                          <td className="py-4 px-4 text-center">
                             {getPriorityBadge(item.priority)}

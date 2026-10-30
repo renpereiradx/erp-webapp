@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react'
 import { ChefHat, Trash2, Calculator } from 'lucide-react'
 import { toast } from 'sonner'
 import { useI18n } from '@/lib/i18n'
+import { getUnitShortLabel } from '@/constants/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -92,7 +93,7 @@ export function RecipesTab() {
               <div className='flex flex-col'>
                 <span className='text-body-md text-foreground'>{item.name}</span>
                 <span className='text-body-sm text-on-surface-deep'>
-                  {item.sku ? `${item.sku} · ` : ''}1 {item.base_unit}
+                  {item.sku ? `${item.sku} · ` : ''}1 {getUnitShortLabel(item.base_unit)}
                 </span>
               </div>
             )}
@@ -234,7 +235,7 @@ export function RecipesTab() {
                         className="flex items-center justify-between gap-sm text-body-sm"
                       >
                         <span className="text-on-surface-deep truncate">
-                          {d.supply_name} · {formatNumber(d.quantity_needed)} {d.unit}
+                          {d.supply_name} · {formatNumber(d.quantity_needed)} {getUnitShortLabel(d.unit)}
                         </span>
                         <span className="text-data-mono font-data-mono text-foreground shrink-0">
                           {formatCurrency(d.total_cost)}
@@ -366,7 +367,7 @@ function AddIngredientModal({
           <div className="space-y-xs">
             <Label htmlFor="ingredient-qty" className="text-body-md-bold text-foreground">
               {t('manufacturing.recipes.add_modal.quantity')}
-              {selectedSupply ? ` (${selectedSupply.unit})` : ''}
+              {selectedSupply ? ` (${getUnitShortLabel(selectedSupply.unit)})` : ''}
             </Label>
             <Input
               id="ingredient-qty"

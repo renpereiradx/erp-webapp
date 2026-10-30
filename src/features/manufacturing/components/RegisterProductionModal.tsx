@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import UnitSelect from '@/components/UnitSelect'
 import EnhancedModal from '@/components/ui/EnhancedModal'
-import { getUnitLabel, isDecimalUnit } from '@/constants/units'
+import { getUnitLabel, getUnitShortLabel, isDecimalUnit } from '@/constants/units'
 import { formatNumber } from '@/utils/currencyUtils'
 import { formatNumberInput, parseNumberInput } from '@/domain/shared/moneyInput'
 import { resolveUnitFactor, type UnitConversionRow } from '@/domain/units/resolveUnitFactor'
@@ -201,7 +201,7 @@ export function RegisterProductionModal({ isOpen, onClose, onSaved }: RegisterPr
                 <span className='text-body-md text-foreground'>{item.name}</span>
                 <span className='text-body-sm text-on-surface-deep'>
                   {item.sku ? `${item.sku} · ` : ''}
-                  {t('manufacturing.production.quantity')} 1 {item.base_unit}
+                  {t('manufacturing.production.quantity')} 1 {getUnitShortLabel(item.base_unit)}
                 </span>
               </div>
             )}

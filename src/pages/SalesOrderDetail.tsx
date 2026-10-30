@@ -38,6 +38,7 @@ import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModa
 import SaleFiscalPanel from '@/features/fiscal/components/SaleFiscalPanel'
 import CancelSaleModal from '@/features/fiscal/components/CancelSaleModal'
 import { useI18n } from '@/lib/i18n'
+import { getUnitShortLabel } from '@/constants/units'
 import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
 import { clientService } from '@/services/clientService'
@@ -505,7 +506,7 @@ const SalesOrderDetail = () => {
                                 )}
                               </div>
                               <span className='bg-surface-muted px-sm py-xs rounded text-label-caps text-muted-foreground whitespace-nowrap uppercase'>
-                                x{item.quantity || 1} {item.unit || ''}
+                                x{item.quantity || 1} {item.unit ? getUnitShortLabel(item.unit) : ''}
                               </span>
                             </div>
                             <div className='grid grid-cols-2 gap-sm p-md bg-surface-muted rounded-md border border-border-subtle'>

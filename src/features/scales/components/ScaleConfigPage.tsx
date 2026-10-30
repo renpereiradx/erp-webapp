@@ -3,6 +3,7 @@ import { useBranch } from '@/contexts/BranchContext';
 import { scaleService } from '../services/scaleService';
 import { Scale, LabelFormat, ScaleCatalogItem, WeighItemResponse } from '@/types';
 import { useToast } from '@/hooks/useToast';
+import { getUnitShortLabel } from '@/constants/units';
 import { 
   Scale as ScaleIcon, 
   Tag, 
@@ -530,7 +531,7 @@ const ScaleConfigPage: React.FC = () => {
                       <option value="">Seleccione un producto...</option>
                       {catalog.map((c) => (
                         <option key={c.product_id} value={c.product_id}>
-                          {c.product_name} (Cod: {c.scale_code || 'S/C'}) - Gs. {c.price_per_unit} / {c.unit}
+                          {c.product_name} (Cod: {c.scale_code || 'S/C'}) - Gs. {c.price_per_unit} / {getUnitShortLabel(c.unit)}
                         </option>
                       ))}
                     </select>
@@ -583,7 +584,7 @@ const ScaleConfigPage: React.FC = () => {
                     </div>
                     <div className="p-3.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
                       <div className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-wide">Cantidad pesada</div>
-                      <div className="font-black text-text-main mt-1 font-mono text-base">{simResponse.quantity} {simResponse.unit}</div>
+                      <div className="font-black text-text-main mt-1 font-mono text-base">{simResponse.quantity} {getUnitShortLabel(simResponse.unit)}</div>
                     </div>
                     <div className="p-3.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
                       <div className="text-[0.6667rem] font-bold text-slate-400 uppercase tracking-wide">Precio unitario</div>
@@ -672,8 +673,8 @@ const ScaleConfigPage: React.FC = () => {
                         <td className="p-4 font-mono font-bold text-xs text-primary">{item.scale_code || 'S/C'}</td>
                         <td className="p-4 font-bold text-text-main">{item.product_name}</td>
                         <td className="p-4 font-mono text-xs text-text-secondary" title={item.product_id}>{item.product_sku || item.product_id}</td>
-                        <td className="p-4 font-mono font-semibold text-text-main">Gs. {item.price_per_unit} / {item.unit}</td>
-                        <td className="p-4 text-text-secondary font-medium uppercase text-xs">{item.base_unit}</td>
+                        <td className="p-4 font-mono font-semibold text-text-main">Gs. {item.price_per_unit} / {getUnitShortLabel(item.unit)}</td>
+                        <td className="p-4 text-text-secondary font-medium uppercase text-xs">{getUnitShortLabel(item.base_unit)}</td>
                       </tr>
                     ))}
                   </tbody>

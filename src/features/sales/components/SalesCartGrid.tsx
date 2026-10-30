@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import EmptyState from '@/components/ui/EmptyState';
 import { formatCurrency, formatNumber } from '@/utils/currencyUtils';
+import { getUnitLabel, getUnitShortLabel } from '@/constants/units';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 
@@ -205,7 +206,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                       <div className="min-w-0">
                         <p className="truncate" title={item.name}>{item.name}</p>
                         <p className="text-body-sm text-outline-fg font-normal mt-0.5">
-                          {t('sales.cart.unitLabel', 'Unidad')}: {item.unit}
+                          {t('sales.cart.unitLabel', 'Unidad')}: {getUnitLabel(item.unit)}
                         </p>
                       </div>
                     </div>
@@ -214,7 +215,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                     <span className="font-data-mono text-body-md text-foreground">
                       {formatNumber(item.quantity)}
                     </span>{' '}
-                    <span className="text-body-sm text-outline-fg">{item.unit}</span>
+                    <span className="text-body-sm text-outline-fg">{getUnitShortLabel(item.unit)}</span>
                     <ShortcutHint keys="Alt+Q" />
                   </TableCell>
                   <TableCell className="px-sm py-sm text-right text-body-md text-on-surface-deep font-data-mono align-top whitespace-nowrap">
@@ -289,7 +290,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                     {item.name}
                   </h4>
                   <p className="text-body-sm text-outline-fg mt-0.5">
-                    {t('sales.cart.unitLabel', 'Unidad')}: {item.unit}
+                    {t('sales.cart.unitLabel', 'Unidad')}: {getUnitLabel(item.unit)}
                   </p>
                 </div>
                 <div className="flex gap-1 shrink-0">
@@ -320,7 +321,7 @@ export const SalesCartGrid: React.FC<SalesCartGridProps> = ({
                 <div>
                   <p className="text-label-caps text-on-surface-deep mb-0.5">{t('sales.cart.col.qty', 'Cant.')}</p>
                   <p className="text-body-md-bold font-data-mono text-foreground">
-                    {formatNumber(item.quantity)} {item.unit}
+                    {formatNumber(item.quantity)} {getUnitShortLabel(item.unit)}
                   </p>
                 </div>
                 <div>
