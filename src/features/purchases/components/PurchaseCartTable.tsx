@@ -74,9 +74,13 @@ export const PurchaseCartTable: React.FC<PurchaseCartTableProps> = ({
     <section className='bg-surface rounded-md shadow-whisper border-0 overflow-hidden'>
       <div className='px-lg py-md border-b border-divider flex flex-col gap-sm bg-surface-muted'>
         <div className='flex flex-col sm:flex-row sm:items-center gap-sm md:gap-md flex-wrap'>
-          <div className='w-full sm:w-80 shrink-0'>
+          {/* w-96 + panel 36rem: mismo tratamiento que el POS de ventas —
+              el dropdown es el picker primario y necesita ancho para nombre,
+              SKU y badges sin encimar. */}
+          <div className='w-full sm:w-96 shrink-0'>
             <PurchaseProductSearchInput
               id='purchase-cart-product-search'
+              panelClassName='sm:w-[36rem]'
               search={modalProductSearch}
               onSearchChange={setModalProductSearch}
               inputRef={cartProductSearchRef}

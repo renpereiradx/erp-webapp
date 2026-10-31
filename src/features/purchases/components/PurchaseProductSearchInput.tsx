@@ -37,6 +37,10 @@ export interface PurchaseProductSearchInputProps {
   label?: string
   /** Clases extra para el input (p.ej. bg-surface sobre header muted). */
   inputClassName?: string
+  /** Clases extra para el panel del dropdown (p.ej. ancho desacoplado del
+      input en el carrito de la página). El modal lo omite: su contenedor
+      scrollable recortaría un panel más ancho que la columna. */
+  panelClassName?: string
   /** Sin permiso de escritura la búsqueda queda deshabilitada. */
   disabled?: boolean
 }
@@ -59,6 +63,7 @@ export const PurchaseProductSearchInput: React.FC<PurchaseProductSearchInputProp
   placeholder,
   label,
   inputClassName,
+  panelClassName,
   disabled,
 }) => {
   const { t } = useI18n()
@@ -102,7 +107,12 @@ export const PurchaseProductSearchInput: React.FC<PurchaseProductSearchInputProp
         {open && results.length > 0 && (
           <div
             ref={dropdownRef}
-            className='absolute top-full left-0 right-0 mt-1 bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-hidden z-50 max-h-[220px] overflow-y-auto py-1'
+            className={cn(
+              // w-full default = ancho del input (modal); panelClassName
+              // permite desacoplarlo (carrito de /compras usa sm:w-[36rem]).
+              'absolute top-full left-0 w-full mt-1 bg-surface rounded-md shadow-fluent-8 border border-border-subtle overflow-hidden z-50 max-h-[400px] overflow-y-auto py-1',
+              panelClassName,
+            )}
             role='listbox'
           >
             {results.map((p, index) => {
@@ -158,19 +168,19 @@ export const PurchaseProductSearchInput: React.FC<PurchaseProductSearchInputProp
                       </span>
                       {/* Fila base de un producto con variantes */}
                       {p.is_base_row && (
-                        <Badge variant='secondary' size='sm'>
+                        <Badge variant='secondary' size='lg' className='text-sm!'>
                           {t('purchases.product_modal.base_row', 'Producto base')}
                         </Badge>
                       )}
                       {/* Indicador de variantes (solo filas sin variante resuelta) */}
                       {!p.variant_id && ((p.has_variant || p.has_variants) || (Array.isArray(p.variants) && p.variants.length > 0)) && (
-                        <Badge variant='info' size='sm'>
+                        <Badge variant='info' size='lg' className='text-sm!'>
                           {t('purchases.product_modal.variants_badge', 'Variantes')}
                         </Badge>
                       )}
                       {/* Marca */}
                       {p.brand_name && (
-                        <Badge variant='secondary' size='sm'>
+                        <Badge variant='secondary' size='lg' className='text-sm!'>
                           {p.brand_name}
                         </Badge>
                       )}
