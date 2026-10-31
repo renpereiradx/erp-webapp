@@ -15,10 +15,11 @@ export const UNIT_CONFIGS = {
   g: { value: 'g', label: 'Gramo (g)', category: 'weight', allow_decimals: true, step: 0.1, min: 0.1, examples: ['10.5', '250.0'] },
   lb: { value: 'lb', label: 'Libra (lb)', category: 'weight', allow_decimals: true, step: 0.01, min: 0.01, examples: ['0.5', '1.5', '2.25'] },
   oz: { value: 'oz', label: 'Onza (oz)', category: 'weight', allow_decimals: true, step: 0.1, min: 0.1, examples: ['8.5', '16.0'] },
-  ton: { value: 'ton', label: 'Tonelada (t)', category: 'weight', allow_decimals: true, step: 0.001, min: 0.001, examples: ['0.5', '1.0', '2.5'] },
+  ton: { value: 'ton', label: 'Tonelada (ton)', category: 'weight', allow_decimals: true, step: 0.001, min: 0.001, examples: ['0.5', '1.0', '2.5'] },
 
   // Volumen (con decimales)
-  l: { value: 'l', label: 'Litro (l)', category: 'volume', allow_decimals: true, step: 0.01, min: 0.01, examples: ['0.5', '1.0', '1.5'] },
+  // "lts" y no "l": una ele sola se confunde con 1/I en el POS (feedback owner).
+  l: { value: 'l', label: 'Litro (lts)', category: 'volume', allow_decimals: true, step: 0.01, min: 0.01, examples: ['0.5', '1.0', '1.5'] },
   ml: { value: 'ml', label: 'Mililitro (ml)', category: 'volume', allow_decimals: true, step: 1, min: 1, examples: ['250', '500'] },
   gal: { value: 'gal', label: 'Galón (gal)', category: 'volume', allow_decimals: true, step: 0.1, min: 0.1, examples: ['1.0', '2.5', '5.0'] },
 

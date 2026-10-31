@@ -229,7 +229,7 @@ export const ProductSearchPanel: React.FC<ProductSearchPanelProps> = ({
                               <Badge variant="success" size="lg" className="shrink-0">
                                 {t('sales.search.stock', 'Stock: {qty} {unit}', {
                                   qty: formatNumber(availableStock),
-                                  unit: product.base_unit,
+                                  unit: getUnitShortLabel(product.base_unit),
                                 })}
                               </Badge>
                             ) : (

@@ -5,6 +5,7 @@ import { variantService } from '@/services/variantService';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { getUnitShortLabel } from '@/constants/units';
 import { requiresStock } from '@/domain/products/sellability';
 
 export function VariantSelectorModal({ product, onClose, onSelect }: any) {
@@ -127,7 +128,7 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                 <div className="flex justify-between items-center text-body-sm text-on-surface-deep">
                   <span className="flex items-center gap-1.5"><Package size={14} /> Stock Total:</span>
                   <span className={cn("font-data-mono font-bold", totalConsolidatedStock > 0 ? "text-success" : "text-error")}>
-                    {totalConsolidatedStock} {product.base_unit || 'unid'}
+                    {totalConsolidatedStock} {getUnitShortLabel(product.base_unit)}
                   </span>
                 </div>
                 {variants.length > 0 && (
@@ -135,13 +136,13 @@ export function VariantSelectorModal({ product, onClose, onSelect }: any) {
                     <div className="flex justify-between items-center text-body-sm text-on-surface-deep">
                       <span className="flex items-center gap-1.5 pl-4 opacity-80"><Package size={12} /> Base (Sin var.):</span>
                       <span className={cn("font-data-mono font-bold text-sm", baseStock > 0 ? "text-success" : "text-error")}>
-                        {baseStock} {product.base_unit || 'unid'}
+                        {baseStock} {getUnitShortLabel(product.base_unit)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-body-sm text-on-surface-deep">
                       <span className="flex items-center gap-1.5 pl-4 opacity-80"><Layers size={12} /> Variantes:</span>
                       <span className={cn("font-data-mono font-bold text-sm", variantsTotalStock > 0 ? "text-success" : "text-error")}>
-                        {variantsTotalStock} {product.base_unit || 'unid'}
+                        {variantsTotalStock} {getUnitShortLabel(product.base_unit)}
                       </span>
                     </div>
                   </>

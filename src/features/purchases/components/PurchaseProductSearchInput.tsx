@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { HighlightText } from '@/components/ui/HighlightText'
 import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { getUnitShortLabel } from '@/constants/units'
 
 export interface PurchaseProductSearchInputProps {
   id: string
@@ -205,6 +206,7 @@ export const PurchaseProductSearchInput: React.FC<PurchaseProductSearchInputProp
                     >
                       {t('purchases.product_modal.stock_label', 'Stock:')}{' '}
                       {p.stock_quantity ?? p.stock ?? p.quantity_available ?? 0}
+                      {p.base_unit ? ` ${getUnitShortLabel(p.base_unit)}` : ''}
                     </div>
                   </div>
                 </div>
